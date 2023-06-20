@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:todopeer/src/settings/list.dart';
+import 'package:todopeer/src/todo/list.dart';
+import 'package:todopeer/src/user/login.dart';
 
-import 'sample_feature/sample_item_details_view.dart';
-import 'sample_feature/sample_item_list_view.dart';
 import 'settings/settings_controller.dart';
 import 'settings/settings_view.dart';
 
@@ -58,26 +57,18 @@ class MyApp extends StatelessWidget {
           // preferred ThemeMode (light, dark, or system default) from the
           // SettingsController to display the correct theme.
           theme: ThemeData(),
+
+          // TODO: adapt to system theme
           darkTheme: ThemeData.dark(),
-          themeMode: settingsController.themeMode,
+          themeMode: ThemeMode.light,
 
           // Define a function to handle named routes in order to support
           // Flutter web url navigation and deep linking.
-          onGenerateRoute: (RouteSettings routeSettings) {
-            return MaterialPageRoute<void>(
-              settings: routeSettings,
-              builder: (BuildContext context) {
-                switch (routeSettings.name) {
-                  case SettingsView.routeName:
-                    return SettingsView(controller: settingsController);
-                  case SampleItemDetailsView.routeName:
-                    return const SampleItemDetailsView();
-                  case SampleItemListView.routeName:
-                  default:
-                    return const TaskListView();
-                }
-              },
-            );
+          routes: {
+            // the default
+            TaskListView.routeName: (ctx) => TaskListPage(),
+            LoginView.routeName: (ctx) => const LoginView(),
+            SettingsView.routeName: (ctx) => SettingsView(controller: settingsController),
           },
         );
       },
