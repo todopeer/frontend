@@ -1,8 +1,11 @@
+import 'dart:js_interop';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:todopeer/src/todo/list.dart';
 import 'package:todopeer/src/user/login.dart';
+import 'package:todopeer/src/user/public.dart';
 
 import 'settings/settings_controller.dart';
 import 'settings/settings_view.dart';
@@ -69,6 +72,19 @@ class MyApp extends StatelessWidget {
             TaskListView.routeName: (ctx) => TaskListPage(),
             LoginView.routeName: (ctx) => const LoginView(),
             SettingsView.routeName: (ctx) => SettingsView(controller: settingsController),
+          },
+          onGenerateRoute: (setting) {
+            if(setting.name.isNull) {
+              return null;
+            }
+
+            final name = setting.name!;
+            if(name.startsWith(PublicUserPage.routeName)){
+              final username = name.substring(PublicUserPage.routeName.length);
+              return MaterialPageRoute(builder: (ctx) => PublicUserPage(username: username));
+            }
+
+            return null;
           },
         );
       },
