@@ -1,7 +1,92 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:flutter/scheduler.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../theme/colors.dart';
+
+/*
+component would be:
+
+TaskView
+- AddTask
+- TaskList
+*/
+
+class TaskListPage extends StatefulWidget {
+  final SharedPreferences preferences;
+  const TaskListPage({super.key, required this.preferences});
+
+  @override
+  _TaskListPageState createState() => _TaskListPageState();
+}
+class _TaskListPageState extends State<TaskListPage> {
+  List<Task> tasks = [];
+  String? token;
+
+  void onTaskAdded(Task task) {
+    setState(() {
+      tasks.add(task);
+    });
+  }
+
+  void onTaskStatusChange(Task task, TaskStatus newStatus) {
+    setState(() {
+      task.status = newStatus;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if(token == null) {
+      return const Text("No Token. This shouldn't be rendered");
+    }
+
+    return Column(
+      children: [
+        AddTaskView(onTaskAdded: onTaskAdded),
+        Text("token: $token"),
+        Expanded(child: TaskListView(tasks: tasks, onTaskStatusChange: onTaskStatusChange,)),
+      ],
+    );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    // make API calls
+    token = widget.preferences.getString("token");
+    if(token == null) {
+      SchedulerBinding.instance.addPostFrameCallback((_) {
+        Navigator.of(context).pushNamed("/login/");
+      });
+    } else {
+      // load tasks
+
+    }
+  }
+}
+
+class TaskListView extends StatelessWidget {
+  static const routeName = "/";
+
+  final List<Task> tasks;
+  final Function(Task,TaskStatus) onTaskStatusChange;
+
+  const TaskListView({super.key, required this.tasks, required this.onTaskStatusChange});
+
+  @override
+  Widget build(BuildContext context) {
+    final tasks = this.tasks;
+    return ListView.builder(
+      itemCount: tasks.length,
+      itemBuilder: (ctx, idx) {
+        final task = tasks[idx];
+        return TaskRow(task: task, onTaskStatusChange: onTaskStatusChange);
+      },
+    );
+  }
+}
 
 enum TaskStatus { notStarted, doing, done, paused }
 class Task {
@@ -13,6 +98,7 @@ class Task {
   TaskStatus status;
 }
 
+// TODO: can remove later
 var tasks = <Task>[
   Task(1, "Learning flutter - Layout", status: TaskStatus.paused),
   Task(2, "Learning dart - classes", status: TaskStatus.doing),
@@ -22,7 +108,7 @@ var tasks = <Task>[
 class AddTaskView extends StatefulWidget {
   final Function(Task) onTaskAdded;
 
-  AddTaskView({required this.onTaskAdded});
+  const AddTaskView({super.key, required this.onTaskAdded});
 
   @override
   _AddTaskViewState createState() => _AddTaskViewState();
@@ -75,7 +161,7 @@ class TaskRow extends StatelessWidget {
   final Task task;
   final Function(Task, TaskStatus) onTaskStatusChange;
 
-  TaskRow(this.task, this.onTaskStatusChange);
+  const TaskRow({super.key, required this.task, required this.onTaskStatusChange});
 
   Color _getBackgroundColor(context) {
     switch (task.status) {
@@ -142,58 +228,3 @@ class TaskRow extends StatelessWidget {
 }
 
 
-class TaskListView extends StatelessWidget {
-  static const routeName = "/";
-
-  final List<Task> tasks;
-  final Function(Task,TaskStatus) onTaskStatusChange;
-
-  const TaskListView({super.key, required this.tasks, required this.onTaskStatusChange});
-
-  @override
-  Widget build(BuildContext context) {
-    final tasks = this.tasks;
-    return ListView.builder(
-      itemCount: tasks.length,
-      itemBuilder: (ctx, idx) {
-        final task = tasks[idx];
-        return TaskRow(task, onTaskStatusChange);
-      },
-    );
-  }
-}
-
-class TaskListPage extends StatefulWidget {
-  @override
-  _TaskListPageState createState() => _TaskListPageState();
-}
-class _TaskListPageState extends State<TaskListPage> {
-  List<Task> tasks = [];
-
-  void onTaskAdded(Task task) {
-    setState(() {
-      tasks.add(task);
-    });
-  }
-
-  void onTaskStatusChange(Task task, TaskStatus newStatus) {
-    setState(() {
-      task.status = newStatus;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-        appBar: AppBar(
-          title: const Text("TodoPeer"),
-        ),
-        body: Column(
-          children: [
-            AddTaskView(onTaskAdded: onTaskAdded),
-            Expanded(child: TaskListView(tasks: tasks, onTaskStatusChange: onTaskStatusChange,)),
-          ],
-        )
-    );
-  }
-}

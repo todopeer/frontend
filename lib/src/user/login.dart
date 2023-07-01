@@ -1,72 +1,147 @@
-import 'package:flutter/cupertino.dart';
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
+import 'package:graphql_flutter/graphql_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-class LoginView extends StatefulWidget {
+const gqlLogin = r'''mutation Login($email: String!, $password: String!) {
+  login(input: {
+    email: $email
+    password: $password
+  }) {
+    token
+  }
+}
+''';
+
+class LoginPage extends StatefulWidget {
   static const routeName = '/login';
+  final SharedPreferences prefs;
 
-  const LoginView({super.key});
+  const LoginPage({super.key, required this.prefs});
 
   @override
-  State<StatefulWidget> createState() => _LoginViewState();
+  State<StatefulWidget> createState() => _LoginPageState();
 }
 
-class _LoginViewState extends State<LoginView> {
+class _LoginPageState extends State<LoginPage> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  String? errorMessage;
+
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text("Login"),),
-     body: Form(
-      key: _formKey,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          TextFormField(
-            decoration: const InputDecoration(
-              hintText: "Email",
-            ),
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter some text';
-              }
-              // Regular expression pattern to match email format
-              final pattern = r'^[\w-]+(\.[\w-]+)*@([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,7}$';
-              final regex = RegExp(pattern);
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
 
-              // Check if the email matches the pattern
-              if (!regex.hasMatch(value)) {
-                return "Invalid email format";
-              }
+  List<Widget> inputFields(BuildContext context) {
+    return [
+      TextFormField(
+        controller: _emailController,
+        decoration: const InputDecoration(
+          hintText: "Email",
+        ),
+        validator: (value) {
+          if (value == null || value.isEmpty) {
+            return 'Please enter some text';
+          }
+          // Regular expression pattern to match email format
+          const pattern = r'^[\w-]+(\.[\w-]+)*@([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,7}$';
+          final regex = RegExp(pattern);
 
-              return null;
-            },
-          ),
-          TextFormField(
-            decoration: const InputDecoration(
-              hintText: "Password",
-            ),
-            obscureText: true,
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 16.0),
-            child:
-            ElevatedButton(
-              onPressed: () {
-                // Validate will return true if the form is valid, or false if
-                // the form is invalid.
-                if (_formKey.currentState!.validate()) {
-                  print("Validated. would proceed");
-                  // Process data.
-                }
-              },
-              child: const Text('Submit'),
-            ),
-          ),
-        ],
+          // Check if the email matches the pattern
+          if (!regex.hasMatch(value)) {
+            return "Invalid email format";
+          }
+
+          return null;
+        },
       ),
-    )
+      TextFormField(
+        controller: _passwordController,
+        decoration: const InputDecoration(
+          hintText: "Password",
+        ),
+        obscureText: true,
+      ),
+    ];
+  }
 
+  @override
+  Widget build(BuildContext ctx) {
+    var form = <Widget>[];
+    if(errorMessage != null) {
+      form.add(Text(errorMessage!));
+    }
+    form.addAll(inputFields(context));
+    form.add(Padding(
+      padding: const EdgeInsets.symmetric(vertical: 16.0),
+      child: Mutation(
+        options: MutationOptions(
+          document: gql(gqlLogin),
+          onCompleted: (dynamic resultData) {
+            if(resultData == null) {
+              return;
+            }
+
+            final String token = resultData['login']['token'];
+            widget.prefs.setString("token", token);
+
+            print("completed, data: ");
+            print(inspect(resultData));
+          },
+          onError: (err) {
+            if(err == null) {
+              return;
+            }
+
+            setState(() {
+              this.errorMessage = err.graphqlErrors.map((e) => e.message).join(";");
+            });
+          },
+        ),
+        builder: buildSubmitButton,
+      ),
+    ));
+    return Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: form,
     );
+  }
+
+  Widget buildSubmitButton(RunMutation runMutation, QueryResult<Object?>? result) {
+    if(result == null || result.data == null) {
+      return ElevatedButton(
+        onPressed: () {
+          // if (!_formKey.currentState!.validate()) {
+          //   return;
+          // }
+
+          // do the login
+          var email = _emailController.value.text;
+          var password = _passwordController.value.text;
+
+          runMutation({
+            "email": email,
+            "password": password,
+          });
+        },
+        child: const Text('Submit'),
+      );
+    }
+
+    if(result.hasException) {
+      return Text(result.exception.toString());
+    }
+
+    if(result.isLoading) {
+      return const Text("Loading...");
+    }
+
+    return Text("Got Data: ${result.data}");
   }
 }
