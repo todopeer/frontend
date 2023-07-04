@@ -40,15 +40,12 @@ GraphQLClient buildClient({
   Link link = HttpLink(uri);
 
   if(token != null) {
-    print("setting client, with valid token");
     final AuthLink authLink = AuthLink(
         getToken: () async {
           return "Bearer $token";
         }
     );
     link = authLink.concat(link);
-  } else {
-    print("client token null");
   }
 
   return GraphQLClient(

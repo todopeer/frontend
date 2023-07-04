@@ -17,6 +17,8 @@ dependencies:
   graphql_flutter: ^5.1.2
   shared_preferences:
   intl: any
+  calendar_view:
+  go_router: ^9.0.0
 
 dev_dependencies:
   flutter_test:

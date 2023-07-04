@@ -2,6 +2,7 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:go_router/go_router.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 
 import '../env.dart';
@@ -14,6 +15,8 @@ TaskView
 - AddTask
 - TaskList
 */
+
+// TODO: add doneAt filter
 const gqlLoadTasks = r"""query($status:[TaskStatus!]) {
   tasks(input:{status: $status}){id,name,description,status,createdAt,updatedAt,dueDate}
 }
@@ -25,7 +28,7 @@ enum TaskStatus { notStarted, doing, done, paused }
 TaskStatus toStatus(String v) {
   switch(v) {
     case "PAUSED": return TaskStatus.paused;
-    case "DONE": return TaskStatus.notStarted;
+    case "DONE": return TaskStatus.done;
     case "DOING": return TaskStatus.doing;
     default: return TaskStatus.notStarted;
   }
@@ -101,7 +104,7 @@ class _TaskListPageState extends State<TaskListPage> {
           options: QueryOptions(
             document: document,
             variables: const {
-              "status": ["NOT_STARTED", "DOING", "PAUSED"],
+              "status": ["NOT_STARTED", "DOING", "PAUSED", "DONE"],
             },
           ),
           builder: tasklistBuilder,
@@ -117,8 +120,10 @@ class _TaskListPageState extends State<TaskListPage> {
     // make API calls
     token = widget.env.tokenNotifier.value;
     if(token == null) {
+      print("navigating to login page");
       SchedulerBinding.instance.addPostFrameCallback((_) {
-        Navigator.of(context).pushNamed("/login/");
+        context.go("/login");
+        // Navigator.of(context).pushNamed("/login");
       });
     } else {
 

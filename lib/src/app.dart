@@ -1,15 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:todopeer/src/env.dart';
 
-import 'package:todopeer/src/todo/list.dart';
-import 'package:todopeer/src/user/login.dart';
-import 'package:todopeer/src/user/public.dart';
-
 import 'layout/routes.dart';
-import 'settings/settings_view.dart';
 
 /// The Widget that configures your application.
 class MyApp extends StatelessWidget {
@@ -23,6 +17,24 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return MaterialApp.router(
+      restorationScopeId: 'app',
+      theme: ThemeData(),
+      darkTheme: ThemeData.dark(),
+      themeMode: ThemeMode.light,
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [
+        Locale('en', ''), // English, no country code
+      ],
+
+      onGenerateTitle: (BuildContext context) => AppLocalizations.of(context)!.appTitle,
+      routerConfig: Routes.getRouter(env),
+    );
     return MaterialApp(
       // Providing a restorationScopeId allows the Navigator built by the
       // MaterialApp to restore the navigation stack when a user leaves and
@@ -48,8 +60,7 @@ class MyApp extends StatelessWidget {
       //
       // The appTitle is defined in .arb files found in the localization
       // directory.
-      onGenerateTitle: (BuildContext context) =>
-      AppLocalizations.of(context)!.appTitle,
+      onGenerateTitle: (BuildContext context) => AppLocalizations.of(context)!.appTitle,
 
       // Define a light and dark color theme. Then, read the user's
       // preferred ThemeMode (light, dark, or system default) from the
@@ -59,9 +70,7 @@ class MyApp extends StatelessWidget {
       // TODO: adapt to system theme
       darkTheme: ThemeData.dark(),
       themeMode: ThemeMode.light,
-      onGenerateRoute: (setting) {
-        return MaterialPageRoute(builder: (ctx) => Routes.getPage(setting, ctx, env));
-      },
+      routes: Routes.getNamed(env),
     );
   }
 }

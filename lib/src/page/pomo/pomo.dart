@@ -2,7 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 class PomoPage extends StatefulWidget {
-  const PomoPage({Key? key}) : super(key: key);
+  const PomoPage({super.key});
 
   @override
   State<StatefulWidget> createState() => _PomoPage();
