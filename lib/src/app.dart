@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:todopeer/src/env.dart';
 
 import 'package:todopeer/src/todo/list.dart';
 import 'package:todopeer/src/user/login.dart';
@@ -14,12 +15,11 @@ import 'settings/settings_view.dart';
 class MyApp extends StatelessWidget {
   const MyApp({
     super.key,
-    required this.prefs,
-    // required this.client,
+    required this.env,
   });
 
-  final SharedPreferences prefs;
   // final ValueNotifier<GraphQLClient> client;
+  final Env env;
 
   @override
   Widget build(BuildContext context) {
@@ -60,7 +60,7 @@ class MyApp extends StatelessWidget {
       darkTheme: ThemeData.dark(),
       themeMode: ThemeMode.light,
       onGenerateRoute: (setting) {
-        return MaterialPageRoute(builder: (ctx) => Routes.getPage(setting, ctx, prefs));
+        return MaterialPageRoute(builder: (ctx) => Routes.getPage(setting, ctx, env));
       },
     );
   }

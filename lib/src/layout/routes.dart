@@ -4,12 +4,8 @@ import 'package:todopeer/src/page/pomo/pomo.dart';
 import 'package:todopeer/src/todo/list.dart';
 import 'package:todopeer/src/user/login.dart';
 
+import '../env.dart';
 import '../page/review/review.dart';
-
-class Env {
-  Env({required this.preferences});
-  final SharedPreferences preferences;
-}
 
 class RoutesConfig {
   RoutesConfig({
@@ -29,10 +25,10 @@ class RoutesConfig {
 
 class Routes {
   static var barConfigs = [
-    RoutesConfig(icon: Icons.list, label: "Task", route: "/tasks", pageBuilder: (ctx, env) => TaskListPage(preferences: env.preferences)),
+    RoutesConfig(icon: Icons.list, label: "Task", route: "/tasks", pageBuilder: (ctx, env) => TaskListPage(env: env,)),
     RoutesConfig(icon: Icons.watch_later_outlined, label: "Pomodoro", route: "/pomo", pageBuilder: (ctx, env) => PomoPage()),
     RoutesConfig(icon: Icons.calendar_today_outlined, label: "Review", route: "/review", pageBuilder: (ctx, env) => ReviewPage()),
-    RoutesConfig(icon: Icons.person, label: "Me", route: "/login", pageBuilder: (ctx, env) => LoginPage(prefs: env.preferences)),
+    RoutesConfig(icon: Icons.person, label: "Me", route: "/login", pageBuilder: (ctx, env) => LoginPage(env: env)),
   ];
 
   static var barItems = barConfigs.map((e) => e.barItem).toList(growable: false);
@@ -50,13 +46,12 @@ class Routes {
     return -1;
   }
 
-  static Widget getPage(RouteSettings settings, BuildContext ctx, final SharedPreferences prefs) {
+  static Widget getPage(RouteSettings settings, BuildContext ctx, final Env env) {
     int idx = getIndexFromRoute(settings.name);
     if(idx < 0) {
       print("invalid idx: $idx for setting: $settings");
       idx = 0;
     }
-    var env = Env(preferences: prefs);
 
     return Scaffold(
       appBar: AppBar(title: const Text("TodoPeer App")),

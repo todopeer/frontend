@@ -1,7 +1,10 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:graphql_flutter/graphql_flutter.dart';
 
+import '../env.dart';
 import '../theme/colors.dart';
 
 /*
@@ -11,22 +14,47 @@ TaskView
 - AddTask
 - TaskList
 */
+const gqlLoadTasks = r"""query($status:[TaskStatus!]) {
+  tasks(input:{status: $status}){id,name,description,status,createdAt,updatedAt,dueDate}
+}
+""";
+
+
+enum TaskStatus { notStarted, doing, done, paused }
+
+TaskStatus toStatus(String v) {
+  switch(v) {
+    case "PAUSED": return TaskStatus.paused;
+    case "DONE": return TaskStatus.notStarted;
+    case "DOING": return TaskStatus.doing;
+    default: return TaskStatus.notStarted;
+  }
+}
+
+class Task {
+  Task(this.id, this.name, {this.status = TaskStatus.notStarted});
+
+  final int id;
+  String name;
+
+  TaskStatus status;
+}
 
 class TaskListPage extends StatefulWidget {
-  final SharedPreferences preferences;
-  const TaskListPage({super.key, required this.preferences});
+  final Env env;
+
+  const TaskListPage({super.key, required this.env});
 
   @override
   _TaskListPageState createState() => _TaskListPageState();
 }
+
 class _TaskListPageState extends State<TaskListPage> {
-  List<Task> tasks = [];
+  // List<Task> tasks = [];
   String? token;
 
   void onTaskAdded(Task task) {
-    setState(() {
-      tasks.add(task);
-    });
+    print("adding task: $task");
   }
 
   void onTaskStatusChange(Task task, TaskStatus newStatus) {
@@ -35,17 +63,49 @@ class _TaskListPageState extends State<TaskListPage> {
     });
   }
 
+  Widget tasklistBuilder(QueryResult<List<Task>> result, { VoidCallback? refetch, FetchMore? fetchMore }) {
+    if(result.hasException) {
+      return Text("Got Exception: ${result.exception.toString()}");
+    }
+
+    if(result.isLoading) {
+      return const Text("loading");
+    }
+
+    List<Task> tasks = [];
+    var data = result.data;
+
+    if(data == null){
+      print("didn't get any task");
+    } else {
+      for(var e in data["tasks"] as List) {
+        tasks.add(Task(e["id"], e["name"], status: toStatus(e["status"])));
+      }
+    }
+
+    return TaskListView(tasks: tasks, onTaskStatusChange: onTaskStatusChange);
+  }
+
   @override
   Widget build(BuildContext context) {
     if(token == null) {
       return const Text("No Token. This shouldn't be rendered");
     }
+    var document = gql(gqlLoadTasks);
+    inspect(document);
 
     return Column(
       children: [
         AddTaskView(onTaskAdded: onTaskAdded),
-        Text("token: $token"),
-        Expanded(child: TaskListView(tasks: tasks, onTaskStatusChange: onTaskStatusChange,)),
+        Expanded(child: Query<List<Task>>(
+          options: QueryOptions(
+            document: document,
+            variables: const {
+              "status": ["NOT_STARTED", "DOING", "PAUSED"],
+            },
+          ),
+          builder: tasklistBuilder,
+        )),
       ],
     );
   }
@@ -55,13 +115,12 @@ class _TaskListPageState extends State<TaskListPage> {
     super.initState();
 
     // make API calls
-    token = widget.preferences.getString("token");
+    token = widget.env.tokenNotifier.value;
     if(token == null) {
       SchedulerBinding.instance.addPostFrameCallback((_) {
         Navigator.of(context).pushNamed("/login/");
       });
     } else {
-      // load tasks
 
     }
   }
@@ -87,23 +146,6 @@ class TaskListView extends StatelessWidget {
     );
   }
 }
-
-enum TaskStatus { notStarted, doing, done, paused }
-class Task {
-  Task(this.id, this.name, {this.status = TaskStatus.notStarted});
-
-  final int id;
-  String name;
-
-  TaskStatus status;
-}
-
-// TODO: can remove later
-var tasks = <Task>[
-  Task(1, "Learning flutter - Layout", status: TaskStatus.paused),
-  Task(2, "Learning dart - classes", status: TaskStatus.doing),
-  Task(3, "LeetCode Daily Quest", status: TaskStatus.done),
-];
 
 class AddTaskView extends StatefulWidget {
   final Function(Task) onTaskAdded;

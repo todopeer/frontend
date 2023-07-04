@@ -2,7 +2,8 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+
+import '../env.dart';
 
 const gqlLogin = r'''mutation Login($email: String!, $password: String!) {
   login(input: {
@@ -16,9 +17,9 @@ const gqlLogin = r'''mutation Login($email: String!, $password: String!) {
 
 class LoginPage extends StatefulWidget {
   static const routeName = '/login';
-  final SharedPreferences prefs;
+  final Env env;
 
-  const LoginPage({super.key, required this.prefs});
+  const LoginPage({super.key, required this.env});
 
   @override
   State<StatefulWidget> createState() => _LoginPageState();
@@ -89,7 +90,7 @@ class _LoginPageState extends State<LoginPage> {
             }
 
             final String token = resultData['login']['token'];
-            widget.prefs.setString("token", token);
+            widget.env.tokenNotifier.value = token;
 
             print("completed, data: ");
             print(inspect(resultData));
@@ -117,6 +118,7 @@ class _LoginPageState extends State<LoginPage> {
     if(result == null || result.data == null) {
       return ElevatedButton(
         onPressed: () {
+          // TODO: check why this would error
           // if (!_formKey.currentState!.validate()) {
           //   return;
           // }
