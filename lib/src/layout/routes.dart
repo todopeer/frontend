@@ -51,7 +51,7 @@ class Routes {
   static var barConfigs = [
     RoutesConfig(icon: Icons.list, label: "Task", route: "/", pageBuilder: (ctx, env) => TaskListPage(env: env,)),
     RoutesConfig(icon: Icons.watch_later_outlined, label: "Pomodoro", route: "/pomo", pageBuilder: (ctx, env) => PomoPage()),
-    RoutesConfig(icon: Icons.calendar_today_outlined, label: "Review", route: "/review", pageBuilder: (ctx, env) => ReviewPage()),
+    RoutesConfig(icon: Icons.calendar_today_outlined, label: "Review", route: "/review", pageBuilder: (ctx, env) => ReviewPage(env: env,)),
     RoutesConfig(icon: Icons.person, label: "Me", route: "/login", pageBuilder: (ctx, env) => LoginPage(env: env)),
   ];
 
