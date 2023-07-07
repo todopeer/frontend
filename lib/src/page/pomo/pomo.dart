@@ -10,7 +10,9 @@ class PomoPage extends StatefulWidget {
 
 class _PomoPage extends State<PomoPage> {
   DateTime? startAt;
-  Duration pomoSize = Duration(minutes: 25);
+
+  // TODO: load pomoSize from user's preference
+  Duration pomoSize = const Duration(minutes: 25);
 
   Stream<Duration> _clock() async* {
     // This loop will run forever because _running is always true

@@ -6,6 +6,8 @@ import 'package:go_router/go_router.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 
 import '../../env.dart';
+import '../../gql/api.dart';
+import '../../gql/model.dart';
 import '../../theme/colors.dart';
 
 /*
@@ -16,46 +18,16 @@ TaskView
 - TaskList
 */
 
-// TODO: add doneAt filter
-const gqlLoadTasks = r"""query($status:[TaskStatus!]) {
-  tasks(input:{status: $status}){id,name,description,status,createdAt,updatedAt,dueDate}
-}
-""";
-
-
-enum TaskStatus { notStarted, doing, done, paused }
-
-TaskStatus toStatus(String v) {
-  switch(v) {
-    case "PAUSED": return TaskStatus.paused;
-    case "DONE": return TaskStatus.done;
-    case "DOING": return TaskStatus.doing;
-    default: return TaskStatus.notStarted;
-  }
-}
-
-class Task {
-  Task(this.id, this.name, {this.status = TaskStatus.notStarted});
-
-  final int id;
-  String name;
-
-  TaskStatus status;
-}
-
 class TaskListPage extends StatefulWidget {
   final Env env;
 
   const TaskListPage({super.key, required this.env});
 
   @override
-  _TaskListPageState createState() => _TaskListPageState();
+  State<TaskListPage> createState() => _TaskListPageState();
 }
 
 class _TaskListPageState extends State<TaskListPage> {
-  // List<Task> tasks = [];
-  String? token;
-
   void onTaskAdded(Task task) {
     print("adding task: $task");
   }
@@ -66,48 +38,28 @@ class _TaskListPageState extends State<TaskListPage> {
     });
   }
 
-  Widget tasklistBuilder(QueryResult<List<Task>> result, { VoidCallback? refetch, FetchMore? fetchMore }) {
+  Widget taskListBuilder(QueryResult result, { VoidCallback? refetch, FetchMore? fetchMore }) {
     if(result.hasException) {
       return Text("Got Exception: ${result.exception.toString()}");
     }
 
-    if(result.isLoading) {
+    if(result.isLoading || result.data == null) {
       return const Text("loading");
     }
 
-    List<Task> tasks = [];
-    var data = result.data;
-
-    if(data == null){
-      print("didn't get any task");
-    } else {
-      for(var e in data["tasks"] as List) {
-        tasks.add(Task(e["id"], e["name"], status: toStatus(e["status"])));
-      }
-    }
+    List<Task> tasks = ((result.data!['tasks'] as List?) ?? []).map(gqlTaskParse).toList();
 
     return TaskListView(tasks: tasks, onTaskStatusChange: onTaskStatusChange);
   }
 
   @override
   Widget build(BuildContext context) {
-    if(token == null) {
-      return const Text("No Token. This shouldn't be rendered");
-    }
-    var document = gql(gqlLoadTasks);
-    inspect(document);
-
     return Column(
       children: [
         AddTaskView(onTaskAdded: onTaskAdded),
-        Expanded(child: Query<List<Task>>(
-          options: QueryOptions(
-            document: document,
-            variables: const {
-              "status": ["NOT_STARTED", "DOING", "PAUSED", "DONE"],
-            },
-          ),
-          builder: tasklistBuilder,
+        Expanded(child: Query(
+          options: qOptionTasks(),
+          builder: taskListBuilder,
         )),
       ],
     );
@@ -118,12 +70,11 @@ class _TaskListPageState extends State<TaskListPage> {
     super.initState();
 
     // make API calls
-    token = widget.env.tokenNotifier.value;
+    var token = widget.env.tokenNotifier.value;
     if(token == null) {
-      print("navigating to login page");
+      log("navigating to login page");
       SchedulerBinding.instance.addPostFrameCallback((_) {
         context.go("/login");
-        // Navigator.of(context).pushNamed("/login");
       });
     } else {
 

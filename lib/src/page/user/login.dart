@@ -4,16 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 
 import '../../env.dart';
-
-const gqlLogin = r'''mutation Login($email: String!, $password: String!) {
-  login(input: {
-    email: $email
-    password: $password
-  }) {
-    token
-  }
-}
-''';
+import '../../gql/api.dart';
 
 class LoginPage extends StatefulWidget {
   static const routeName = '/login';
@@ -83,7 +74,7 @@ class _LoginPageState extends State<LoginPage> {
       padding: const EdgeInsets.symmetric(vertical: 16.0),
       child: Mutation(
         options: MutationOptions(
-          document: gql(gqlLogin),
+          document: gql(gqlMutationLogin),
           onCompleted: (dynamic resultData) {
             if(resultData == null) {
               return;

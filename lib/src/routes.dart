@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:todopeer/src/page/pomo/pomo.dart';
-import 'package:todopeer/src/page/todo/list.dart';
-import 'package:todopeer/src/page/user/login.dart';
 
-import '../env.dart';
-import '../page/review/review.dart';
+import './env.dart';
+import './page/pomo/pomo.dart';
+import './page/todo/list.dart';
+import './page/user/login.dart';
+import './page/review/review.dart';
 
 class RoutesConfig {
   static int counter = 0;
@@ -69,28 +69,6 @@ class Routes {
     // didn't find an active index
     return -1;
   }
-
-  // static Widget getPage(RouteSettings settings, BuildContext ctx, final Env env) {
-  //   int idx = getIndexFromRoute(settings.name);
-  //   if(idx < 0) {
-  //     idx = 0;
-  //   }
-  //
-  //   return Scaffold(
-  //     appBar: AppBar(title: const Text("TodoPeer App")),
-  //     body: barConfigs[idx].pageBuilder(ctx, env),
-  //     bottomNavigationBar: BottomNavigationBar(
-  //       items: barItems,
-  //       currentIndex: idx,
-  //
-  //       unselectedItemColor: Colors.blueGrey,
-  //       selectedItemColor: Theme.of(ctx).primaryColor,
-  //
-  //       showUnselectedLabels: true,
-  //       onTap: (idx) => Navigator.of(ctx).pushNamed(barConfigs[idx].route),
-  //     ),
-  //   );
-  // }
 
   static Map<String, WidgetBuilder> getNamed(Env env) {
     return Map<String, WidgetBuilder>.fromEntries(barConfigs.map((e) => MapEntry(e.route, (ctx) => e.pageBuilder(ctx, env))));
