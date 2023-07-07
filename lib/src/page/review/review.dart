@@ -4,7 +4,7 @@ import 'package:graphql_flutter/graphql_flutter.dart';
 import 'package:intl/intl.dart';
 
 import '../../env.dart';
-import '../../todo/list.dart';
+import '../todo/list.dart';
 
 const gqlDayQuery = r"""
 query($days:Int!, $since:Time!) {

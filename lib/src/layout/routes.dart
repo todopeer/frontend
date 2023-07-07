@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:todopeer/src/page/pomo/pomo.dart';
-import 'package:todopeer/src/todo/list.dart';
-import 'package:todopeer/src/user/login.dart';
+import 'package:todopeer/src/page/todo/list.dart';
+import 'package:todopeer/src/page/user/login.dart';
 
 import '../env.dart';
 import '../page/review/review.dart';

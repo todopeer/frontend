@@ -3,7 +3,7 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 
-import '../env.dart';
+import '../../env.dart';
 
 const gqlLogin = r'''mutation Login($email: String!, $password: String!) {
   login(input: {

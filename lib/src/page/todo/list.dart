@@ -5,8 +5,8 @@ import 'package:flutter/scheduler.dart';
 import 'package:go_router/go_router.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 
-import '../env.dart';
-import '../theme/colors.dart';
+import '../../env.dart';
+import '../../theme/colors.dart';
 
 /*
 component would be:
